@@ -1,5 +1,6 @@
 package com.johna.sqlite.framework.core.xml;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -16,7 +17,6 @@ import org.xml.sax.SAXException;
 import android.content.Context;
 import android.content.res.AssetManager;
 
-import com.johna.sqlite.framework.core.SQLiteFrameworkException;
 import com.johna.sqlite.framework.core.structure.Database;
 
 class SQLiteDOMParser {
@@ -27,7 +27,8 @@ class SQLiteDOMParser {
 		this.context = context;
 	}
 
-	public Database getDataBaseInfo() throws SQLiteFrameworkException {
+	public Database getDataBaseInfo() throws FileNotFoundException,
+			SAXException {
 
 		Element root = this.parse();
 
@@ -40,35 +41,42 @@ class SQLiteDOMParser {
 				XmlSchemaTagAttribute.DATABASE_NAME.getXmlAttrName())
 				.getNodeValue();
 
-		int version = Integer.parseInt(nodeMap.getNamedItem(
-				XmlSchemaTagAttribute.VERSION.getXmlAttrName()).getNodeValue());
+		int version = 0;
+
+		try {
+			version = Integer.parseInt(nodeMap.getNamedItem(
+					XmlSchemaTagAttribute.VERSION.getXmlAttrName())
+					.getNodeValue());
+		} catch (NumberFormatException e) {
+			throw new NumberFormatException(
+					"Dbschema.xml file has not defined a valid version for the database. "
+							+ "The version of a database must be an integer.");
+		}
 
 		return new Database(databaseName, version);
 	}
 
-	private Element parse() throws SQLiteFrameworkException {
+	private Element parse() throws FileNotFoundException, SAXException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = null;
+
+		try {
+			builder = factory.newDocumentBuilder();
+		} catch (ParserConfigurationException e1) {
+		}
 
 		try {
 			AssetManager assetManager = this.context.getAssets();
-			InputStream in =  assetManager.open("xml/dbschema.xml");
+			InputStream in = assetManager.open("xml/dbschema.xml");
 
-			DocumentBuilder builder = factory.newDocumentBuilder();
 			Document dom = builder.parse(in);
 
 			return dom.getDocumentElement();
-		} catch (ParserConfigurationException e) {
-			throw new SQLiteFrameworkException(
-					"An ParserConfigurationException occurred while trying to read the xml file.",
-					e);
 		} catch (SAXException e) {
-			throw new SQLiteFrameworkException(
-					"An SAXException occurred while trying to read the xml file.",
-					e);
+			throw e;
 		} catch (IOException e) {
-			throw new SQLiteFrameworkException(
-					"An IOException occurred while trying to read the xml file.",
-					e);
+			throw new FileNotFoundException(
+					"assets/xml/dbschema.xml file not found.");
 		}
 	}
 }
