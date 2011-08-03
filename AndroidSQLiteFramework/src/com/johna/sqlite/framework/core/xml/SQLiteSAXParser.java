@@ -174,7 +174,7 @@ class SQLiteSAXParser {
 		return this.database;
 	}
 
-	public Database initialLoadParse(int version, String dbName)
+	public Database bulkInsertParse(int version, String dbName)
 			throws SQLiteFrameworkException {
 
 		XmlPullParser xpp = null;

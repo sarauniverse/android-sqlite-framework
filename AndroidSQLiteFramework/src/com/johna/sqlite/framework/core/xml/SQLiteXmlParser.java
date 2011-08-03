@@ -16,14 +16,26 @@ package com.johna.sqlite.framework.core.xml;
 //import org.w3c.dom.Document;
 //import org.xml.sax.SAXException;
 
+import java.io.FileNotFoundException;
+
+import org.xml.sax.SAXException;
+
 import android.content.Context;
 
 import com.johna.sqlite.framework.core.SQLiteFrameworkException;
 import com.johna.sqlite.framework.core.structure.Database;
 
 /**
+ * SQLiteXmlParser is the class to analyze the different xml files in the folder
+ * assets/xml to obtain information from the database such as name and version.
+ * <p>
+ * Additionally, this class implements the functionality to extract the
+ * structure of the database defined in the dbschema.xml file, and the records
+ * that be added in the bulk insert operation.
+ * 
  * @author N. Johnatan Flores Carmona
- *
+ * @version 1.0.1
+ * @since August 03, 2011
  */
 public class SQLiteXmlParser {
 
@@ -31,7 +43,10 @@ public class SQLiteXmlParser {
 	private Database database;
 
 	/**
+	 * Create an object that can read xml files in the folder assets/xml.
+	 * 
 	 * @param context
+	 *            to use to open and read the xml file
 	 */
 	public SQLiteXmlParser(Context context) {
 		this.context = context;
@@ -41,7 +56,10 @@ public class SQLiteXmlParser {
 	}
 
 	/**
-	 * @return
+	 * Return the object {@link Database} with the structure of the database
+	 * defined in the file dbschema.xml
+	 * 
+	 * @return the object Database with the structure of the database
 	 * @throws SQLiteFrameworkException
 	 */
 	public Database getDatabaseStructure() throws SQLiteFrameworkException {
@@ -55,41 +73,59 @@ public class SQLiteXmlParser {
 	}
 
 	/**
-	 * @return
+	 * Return the object with the structure of the records to be added in the
+	 * process of bulk insert.
+	 * 
+	 * @return the object with the structure of the records
 	 * @throws SQLiteFrameworkException
+	 *             If there is an error in the xml file.
 	 */
-	public Database getInitialLoadStructure() throws SQLiteFrameworkException {
+	public Database getBulkInsertStructure() throws SQLiteFrameworkException {
 		SQLiteSAXParser saxParser = new SQLiteSAXParser(context);
 
 		int version = SQLiteXmlParser.getDatabaseVersion(context);
 
 		String dbName = SQLiteXmlParser.getDatabaseName(context);
 
-		return saxParser.initialLoadParse(version, dbName);
+		return saxParser.bulkInsertParse(version, dbName);
 	}
 
 	/**
+	 * Returns the name assigned to the database
+	 * 
 	 * @param context
-	 * @return
-	 * @throws SQLiteFrameworkException
+	 *            to use to open and read the xml file
+	 * @return the name of the database
 	 */
-	public static String getDatabaseName(Context context)
-			throws SQLiteFrameworkException {
+	public static String getDatabaseName(Context context) {
 		SQLiteDOMParser parser = new SQLiteDOMParser(context);
 
-		return parser.getDataBaseInfo().getName();
+		try {
+			return parser.getDataBaseInfo().getName();
+		} catch (FileNotFoundException e) {
+			throw new IllegalArgumentException(e.getMessage(), e);
+		} catch (SAXException e) {
+			throw new IllegalArgumentException(e.getMessage(), e);
+		}
 	}
 
 	/**
+	 * Returns the version assigned to the database
+	 * 
 	 * @param context
-	 * @return
-	 * @throws SQLiteFrameworkException
+	 *            to use to open and read the xml file
+	 * @return the version of the database
 	 */
-	public static int getDatabaseVersion(Context context)
-			throws SQLiteFrameworkException {
+	public static int getDatabaseVersion(Context context) {
 		SQLiteDOMParser parser = new SQLiteDOMParser(context);
 
-		return parser.getDataBaseInfo().getVersion();
+		try {
+			return parser.getDataBaseInfo().getVersion();
+		} catch (FileNotFoundException e) {
+			throw new IllegalArgumentException(e.getMessage(), e);
+		} catch (SAXException e) {
+			throw new IllegalArgumentException(e.getMessage(), e);
+		}
 	}
 
 	private void validateXmlFile() {

@@ -2,7 +2,10 @@ package com.johna.sqlite.framework.core.structure;
 
 import java.util.ArrayList;
 
+import com.johna.sqlite.framework.core.SQLiteFrameworkException;
+
 import android.content.ContentValues;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 class Table {
@@ -62,7 +65,7 @@ class Table {
 		return statement.toString();
 	}
 
-	public void insertRows(SQLiteDatabase db) {
+	public void insertRows(SQLiteDatabase db) throws SQLiteFrameworkException {
 		this.insertRow(0, db);
 	}
 
@@ -91,7 +94,8 @@ class Table {
 		}
 	}
 
-	private void insertRow(int index, SQLiteDatabase db) {
+	private void insertRow(int index, SQLiteDatabase db)
+			throws SQLiteFrameworkException {
 		if (index < this.rows.size()) {
 			ArrayList<String> values = this.rows.get(index).getValues();
 
@@ -104,10 +108,11 @@ class Table {
 			}
 
 			try {
-				long id = db.insertOrThrow(this.name, null, cv);
-				System.out.println(id);
-			} catch (Exception e) {
-				e.printStackTrace();
+				db.insertOrThrow(this.name, null, cv);
+			} catch (SQLException e) {
+				throw new SQLiteFrameworkException(
+						"An error occurred when inserting record " + index
+								+ " of Table " + this.name + ".", e);
 			}
 
 			this.insertRow(++index, db);
